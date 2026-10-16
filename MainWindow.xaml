@@ -1,0 +1,188 @@
+<Window x:Class="WifiManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="مدير شبكة الواي فاي - MikroTik" Height="660" Width="1050"
+        FlowDirection="RightToLeft" FontFamily="Segoe UI" FontSize="14"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="SelectionMode" Value="Extended"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+        </Style>
+    </Window.Resources>
+    <DockPanel>
+        <TextBlock x:Name="StatusText" DockPanel.Dock="Top" Text="غير متصل" Padding="6"
+                   Background="#EEEEEE" TextAlignment="Center"/>
+        <TabControl x:Name="Tabs" Margin="6" SelectionChanged="Tabs_SelectionChanged">
+
+            <!-- الاتصال -->
+            <TabItem Header="الاتصال">
+                <StackPanel Margin="20" Width="420" HorizontalAlignment="Right">
+                    <TextBlock Text="عنوان الراوتر"/><TextBox x:Name="HostBox" Margin="0,2,0,8"/>
+                    <TextBlock Text="منفذ API"/><TextBox x:Name="PortBox" Margin="0,2,0,8"/>
+                    <TextBlock Text="اسم المستخدم"/><TextBox x:Name="UserBox" Margin="0,2,0,8"/>
+                    <TextBlock Text="كلمة مرور الراوتر"/><PasswordBox x:Name="PassBox" Margin="0,2,0,8"/>
+                    <TextBlock Text="اسم المحل (يظهر على الكرت)"/><TextBox x:Name="ShopBox" Margin="0,2,0,8"/>
+                    <TextBlock Text="واجهة الإنترنت WAN (لقياس الفاقد)"/><TextBox x:Name="WanBox" Margin="0,2,0,8"/>
+                    <TextBlock Text="طول رقم الكرت"/><TextBox x:Name="CodeLenBox" Margin="0,2,0,8"/>
+                    <TextBlock Text="كلمة مرور لقفل البرنامج (اتركها فارغة لعدم التغيير)"/>
+                    <PasswordBox x:Name="AppPassBox" Margin="0,2,0,8"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="حفظ واتصال" Click="SaveConnect_Click"/>
+                        <Button Content="إزالة قفل البرنامج" Click="ClearAppPass_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+
+            <!-- الباقات -->
+            <TabItem Header="الباقات">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Bottom" Margin="6">
+                        <TextBlock Text="الاسم" VerticalAlignment="Center" Margin="4"/>
+                        <TextBox x:Name="PlanNameBox" Width="170"/>
+                        <TextBlock Text="الساعات" VerticalAlignment="Center" Margin="8,4,4,4"/>
+                        <TextBox x:Name="PlanHoursBox" Width="60"/>
+                        <TextBlock Text="السعر" VerticalAlignment="Center" Margin="8,4,4,4"/>
+                        <TextBox x:Name="PlanPriceBox" Width="80"/>
+                        <Button Content="إضافة باقة" Click="AddPlan_Click"/>
+                        <Button Content="حذف المحدد" Click="DelPlan_Click"/>
+                    </WrapPanel>
+                    <DataGrid x:Name="PlansGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="الباقة" Binding="{Binding Name}" Width="2*"/>
+                            <DataGridTextColumn Header="الساعات" Binding="{Binding Hours}" Width="*"/>
+                            <DataGridTextColumn Header="السعر" Binding="{Binding Price}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- توليد -->
+            <TabItem Header="توليد كروت">
+                <StackPanel Margin="20" Width="360" HorizontalAlignment="Right">
+                    <TextBlock Text="الباقة"/>
+                    <ComboBox x:Name="PlanCombo" DisplayMemberPath="Name" Margin="0,2,0,10"/>
+                    <TextBlock Text="عدد الكروت"/>
+                    <TextBox x:Name="CountBox" Text="10" Margin="0,2,0,10"/>
+                    <CheckBox x:Name="PrintCheck" Content="فتح صفحة الطباعة بعد التوليد" IsChecked="True" Margin="0,0,0,10"/>
+                    <Button Content="توليد الكروت" Click="Generate_Click"/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- الكروت -->
+            <TabItem Header="الكروت">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Bottom" Margin="6">
+                        <Button Content="تحديث" Click="RefreshCards_Click"/>
+                        <Button Content="تعيين كمباع" Click="MarkSold_Click"/>
+                        <Button Content="طباعة المحدد" Click="PrintSel_Click"/>
+                        <Button Content="طباعة غير المباعة" Click="PrintUnsold_Click"/>
+                        <Button Content="حذف المحدد (غير المباع فقط)" Click="DelCards_Click"/>
+                    </WrapPanel>
+                    <DataGrid x:Name="CardsGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="رقم الكرت" Binding="{Binding Code}" Width="*"/>
+                            <DataGridTextColumn Header="الباقة" Binding="{Binding PlanName}" Width="1.3*"/>
+                            <DataGridTextColumn Header="السعر" Binding="{Binding Price}" Width="0.7*"/>
+                            <DataGridTextColumn Header="الحالة" Binding="{Binding State}" Width="0.7*"/>
+                            <DataGridTextColumn Header="تاريخ الإنشاء" Binding="{Binding CreatedAt}" Width="1.3*"/>
+                            <DataGridTextColumn Header="تاريخ البيع" Binding="{Binding SoldAt}" Width="1.3*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- المتصلون -->
+            <TabItem Header="المتصلون الآن">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Bottom" Margin="6">
+                        <Button Content="تحديث" Click="RefreshActive_Click"/>
+                        <Button Content="فصل المحدد" Click="Kick_Click"/>
+                    </WrapPanel>
+                    <DataGrid x:Name="ActiveGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="الكرت" Binding="{Binding User}" Width="*"/>
+                            <DataGridTextColumn Header="العنوان" Binding="{Binding Address}" Width="*"/>
+                            <DataGridTextColumn Header="MAC" Binding="{Binding Mac}" Width="1.3*"/>
+                            <DataGridTextColumn Header="مدة الاتصال" Binding="{Binding Uptime}" Width="*"/>
+                            <DataGridTextColumn Header="المتبقي" Binding="{Binding TimeLeft}" Width="*"/>
+                            <DataGridTextColumn Header="تحميل" Binding="{Binding Down}" Width="*"/>
+                            <DataGridTextColumn Header="رفع" Binding="{Binding Up}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- الفاقد -->
+            <TabItem Header="الفاقد">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Margin="8">
+                        <TextBlock x:Name="LossSummary" FontSize="15" TextWrapping="Wrap"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#555" Margin="0,6,0,0"
+                                   Text="الفكرة: نقارن ترافيك واجهة الإنترنت (WAN) بمجموع استهلاك كروت الهوتسبوت. أي فرق كبير يعني ترافيك خارج الحساب (جهاز متجاوز للهوتسبوت، IP-binding bypassed، أو منفذ سلكي مباشر). شغّل لقطة كل بضع دقائق أو فعّل المراقبة التلقائية والبرنامج مفتوح."/>
+                    </StackPanel>
+                    <WrapPanel DockPanel.Dock="Bottom" Margin="6">
+                        <Button Content="لقطة الآن" Click="SnapNow_Click"/>
+                        <Button Content="تحديث الجدول" Click="RefreshLoss_Click"/>
+                        <CheckBox x:Name="AutoMon" Content="مراقبة تلقائية كل 5 دقائق" VerticalAlignment="Center" Margin="12,0"
+                                  Checked="AutoMon_Changed" Unchecked="AutoMon_Changed"/>
+                    </WrapPanel>
+                    <DataGrid x:Name="LossGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="الوقت" Binding="{Binding Time}" Width="1.5*"/>
+                            <DataGridTextColumn Header="WAN (MB)" Binding="{Binding WanMB, StringFormat=N1}" Width="*"/>
+                            <DataGridTextColumn Header="الكروت (MB)" Binding="{Binding HotspotMB, StringFormat=N1}" Width="*"/>
+                            <DataGridTextColumn Header="الفاقد (MB)" Binding="{Binding LossMB, StringFormat=N1}" Width="*"/>
+                            <DataGridTextColumn Header="النسبة %" Binding="{Binding LossPct, StringFormat=N1}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- الفحص -->
+            <TabItem Header="الفحص الأمني">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Top" Margin="6">
+                        <Button Content="تشغيل الفحص الشامل" Click="RunAudit_Click"/>
+                        <Button Content="نسخة احتياطية على الراوتر" Click="BackupRouter_Click"/>
+                        <Button Content="حفظ التقرير على سطح المكتب" Click="SaveReport_Click"/>
+                    </WrapPanel>
+                    <TextBox x:Name="AuditBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" FontFamily="Consolas" Margin="6"/>
+                </DockPanel>
+            </TabItem>
+
+            <!-- التقارير -->
+            <TabItem Header="التقارير">
+                <DockPanel>
+                    <TextBlock x:Name="ReportSummary" DockPanel.Dock="Top" FontSize="16" Margin="10"/>
+                    <DataGrid x:Name="ReportGrid">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="اليوم" Binding="{Binding Day}" Width="*"/>
+                            <DataGridTextColumn Header="عدد الكروت المباعة" Binding="{Binding Count}" Width="*"/>
+                            <DataGridTextColumn Header="الإيراد" Binding="{Binding Total}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- السجل -->
+            <TabItem Header="سجل العمليات">
+                <DataGrid x:Name="LogGrid">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="الوقت" Binding="{Binding Time}" Width="1.2*"/>
+                        <DataGridTextColumn Header="العملية" Binding="{Binding Action}" Width="1.2*"/>
+                        <DataGridTextColumn Header="التفاصيل" Binding="{Binding Details}" Width="3*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>
